@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+format_version = 1
+
+[[test]]
+name = "the explanation of a rule is left as a note"
+[test.params]
+agent_explain_guide = "E"
+[test.mock."praksis.rules.read"]
+layer = "mine"
+trigger = "the event x"
+effect = "local-write"
+text = "RULE TEXT"
+[test.mock."ai.complete"]
+text = "  It moves mail.  "
+model = "m1"
+data = "local"
+[test.event]
+type = "command.agent.explain-rule"
+data = { rule = "r1" }
+[[test.call]]
+capability = "praksis.rules.read"
+args = { rule = "r1" }
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "E\nThe rule is r1, in the layer mine; effect class local-write; it is fired by the event x.", text = "RULE TEXT", profile = "local", max_tokens = 600 }
+[[test.call]]
+capability = "praksis.notes.save"
+args = { title = "Explanation of r1", text = "It moves mail.\n\n(m1, local)" }

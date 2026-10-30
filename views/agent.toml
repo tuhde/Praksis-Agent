@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: Apache-2.0
+# What the maintenance agent has found and left: rules without a test (with a button that has the
+# agent write one), the changes it has staged, and its notes. Needs grants for praksis.rules.list,
+# praksis.agent.proposals and praksis.notes.list in the layer that owns this view.
+title = "Agent"
+description = "Rules without tests, changes the agent has staged, and its notes."
+
+[param.note]
+type = "string"
+default = ""
+
+[source.untested]
+capability = "praksis.rules.list"
+args = { untested = true }
+
+[source.staged]
+capability = "praksis.agent.proposals"
+
+[source.notes]
+capability = "praksis.notes.list"
+args = { limit = 30 }
+
+[[component]]
+type = "text"
+value = "Rules without a test"
+style = "title"
+
+[[component]]
+type = "table"
+rows = { cel = "source.untested.items" }
+empty = "Every rule has a test."
+columns = [
+  { title = "Rule", value = { cel = "item.id" } },
+  { title = "Layer", value = { cel = "item.layer" } },
+  { title = "Effect", value = { cel = "item.effect" } },
+]
+[[component.row_action]]
+label = "Write tests"
+command = "agent.write-tests"
+args = { rule = { cel = "item.id" } }
+
+[[component]]
+type = "text"
+value = "Staged changes (praksis agent show <id>)"
+style = "title"
+
+[[component]]
+type = "table"
+rows = { cel = "source.staged.items" }
+empty = "Nothing is staged."
+columns = [
+  { title = "Id", value = { cel = "item.id" } },
+  { title = "Layer", value = { cel = "item.layer" } },
+  { title = "Rule", value = { cel = "item.rule" } },
+  { title = "Why", value = { cel = "item.reason" } },
+]
+
+[[component]]
+type = "text"
+value = "Notes"
+style = "title"
+
+[[component]]
+type = "table"
+rows = { cel = "source.notes.items" }
+empty = "No notes."
+columns = [
+  { title = "When", value = { cel = "item.at" } },
+  { title = "Title", value = { cel = "item.title" } },
+]
+select = { param = "note", value = { cel = "item.id" } }
+
+[[component]]
+type = "text"
+value = { cel = "view.note == '' ? 'Select a note to read it.' : source.notes.items.filter(n, n.id == view.note)[0].text" }

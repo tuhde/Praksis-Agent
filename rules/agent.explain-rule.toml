@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+id = "agent.explain-rule"
+description = "Asks a model to explain a rule in plain words and leaves the explanation as a note (see the view Agent). It changes nothing."
+effect = "external"
+needs = ["praksis.rules.read", "ai.complete", "praksis.notes.save"]
+requires_modules = ["ai"]
+
+[trigger]
+kind = "command"
+title = "Explain a rule"
+description = "A model explains what a rule does and what could go wrong."
+[[trigger.param]]
+name = "rule"
+type = "string"
+label = "The id of the rule"
+
+[[action]]
+id = "read"
+capability = "praksis.rules.read"
+args = { rule = { cel = "event.data.rule" } }
+
+[[action]]
+id = "explain"
+capability = "ai.complete"
+args = { prompt = { cel = "params.agent_explain_guide + '\\nThe rule is ' + event.data.rule + ', in the layer ' + results.read.layer + '; effect class ' + results.read.effect + '; it is fired by ' + results.read.trigger + '.'" }, text = { cel = "results.read.text" }, profile = { cel = "params.agent_profile" }, max_tokens = 600 }
+
+[[action]]
+id = "note"
+capability = "praksis.notes.save"
+args = { title = { cel = "'Explanation of ' + event.data.rule" }, text = { cel = "results.explain.text.trim() + '\\n\\n(' + results.explain.model + ', ' + results.explain.data + ')'" } }

@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: Apache-2.0
+format_version = 1
+
+[[test]]
+name = "a test that passes the checks is staged and the note says how to take it"
+[test.params]
+agent_test_guide = "G"
+[test.mock."praksis.rules.read"]
+layer = "mine"
+trigger = "the event x"
+text = "RULE TEXT"
+[test.mock."ai.complete"]
+text = "```toml\nformat_version = 1\n```"
+model = "m1"
+data = "local"
+[test.mock."praksis.agent.propose"]
+ok = true
+covers = true
+problems = []
+staged = true
+id = "abc"
+[test.event]
+type = "command.agent.write-tests"
+data = { rule = "r1" }
+[[test.call]]
+capability = "praksis.rules.read"
+args = { rule = "r1" }
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "G\nThe rule has the id r1. It is fired by the event x.", text = "RULE TEXT", profile = "local", max_tokens = 2000 }
+[[test.call]]
+capability = "praksis.agent.propose"
+args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local)", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
+[[test.call]]
+capability = "praksis.notes.save"
+args = { title = "Tests for r1", text = "A test file for r1 is staged as abc. Look at it with: praksis agent show abc. If it is good, praksis agent export <id> <your checkout of mine> and commit it yourself." }
+
+[[test]]
+name = "a test that is refused twice is not staged and the note says why"
+[test.params]
+agent_test_guide = "G"
+[test.mock."praksis.rules.read"]
+layer = "mine"
+trigger = "the event x"
+text = "RULE TEXT"
+[test.mock."ai.complete"]
+text = "```toml\nformat_version = 1\n```"
+model = "m1"
+data = "local"
+[test.mock."praksis.agent.propose"]
+ok = false
+covers = false
+problems = ["test: tests/r1.toml: boom"]
+staged = false
+id = ""
+[test.event]
+type = "command.agent.write-tests"
+data = { rule = "r1" }
+[[test.call]]
+capability = "praksis.rules.read"
+args = { rule = "r1" }
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "G\nThe rule has the id r1. It is fired by the event x.", text = "RULE TEXT", profile = "local", max_tokens = 2000 }
+[[test.call]]
+capability = "praksis.agent.propose"
+args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local)", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "G\nThe rule has the id r1. It is fired by the event x.\nYour earlier file was refused by the checks; the problems are below the rule. Write the whole file again, fixed.", text = "RULE TEXT\n--- your earlier file ---\n```toml\nformat_version = 1\n```\n--- the problems ---\nno test makes the rule fire\ntest: tests/r1.toml: boom", profile = "local", max_tokens = 2000 }
+[[test.call]]
+capability = "praksis.agent.propose"
+args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local), second try", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
+[[test.call]]
+capability = "praksis.notes.save"
+args = { title = "Tests for r1", text = "No test file was staged for r1: the checks refused what the model wrote twice. No test made the rule fire. test: tests/r1.toml: boom" }

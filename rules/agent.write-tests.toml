@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: Apache-2.0
+id = "agent.write-tests"
+description = "Asks a model to write a test file for a rule that has none. The file is checked at once (does it run, does it make the rule fire, does it break anything), the model gets one more try with the problems if it fails, and a file that passes is staged for you to look at (praksis agent show) and export into your own checkout. Nothing is changed in any layer."
+effect = "external"
+needs = ["praksis.rules.read", "ai.complete", "praksis.agent.propose", "praksis.notes.save"]
+requires_modules = ["ai"]
+
+[trigger]
+kind = "command"
+title = "Write tests for a rule"
+description = "The rule needs to be in a layer with ai_maintained = true. The result is a note and, if it is good, a staged change."
+[[trigger.param]]
+name = "rule"
+type = "string"
+label = "The id of a rule that has no test"
+
+[[action]]
+id = "read"
+capability = "praksis.rules.read"
+args = { rule = { cel = "event.data.rule" } }
+
+[[action]]
+id = "draft"
+capability = "ai.complete"
+args = { prompt = { cel = "params.agent_test_guide + '\\nThe rule has the id ' + event.data.rule + '. It is fired by ' + results.read.trigger + '.'" }, text = { cel = "results.read.text" }, profile = { cel = "params.agent_profile" }, max_tokens = 2000 }
+
+[[action]]
+id = "propose"
+capability = "praksis.agent.propose"
+args = { layer = { cel = "results.read.layer" }, rule = { cel = "event.data.rule" }, reason = { cel = "'Tests written by the maintenance agent with the model ' + results.draft.model + ' (' + results.draft.data + ')'" }, files = { cel = "[{'path': 'tests/' + event.data.rule + '.toml', 'content': results.draft.text.replace('```toml', '').replace('```', '').trim()}]" } }
+
+# one more try, told what was wrong
+[[action]]
+id = "fix"
+capability = "ai.complete"
+when = { cel = "!results.propose.ok" }
+args = { prompt = { cel = "params.agent_test_guide + '\\nThe rule has the id ' + event.data.rule + '. It is fired by ' + results.read.trigger + '.\\nYour earlier file was refused by the checks; the problems are below the rule. Write the whole file again, fixed.'" }, text = { cel = "results.read.text + '\\n--- your earlier file ---\\n' + results.draft.text + '\\n--- the problems ---\\n' + (results.propose.covers ? '' : 'no test makes the rule fire\\n') + results.propose.problems.join('\\n')" }, profile = { cel = "params.agent_profile" }, max_tokens = 2000 }
+
+[[action]]
+id = "propose_again"
+capability = "praksis.agent.propose"
+when = { cel = "!results.propose.ok" }
+args = { layer = { cel = "results.read.layer" }, rule = { cel = "event.data.rule" }, reason = { cel = "'Tests written by the maintenance agent with the model ' + results.fix.model + ' (' + results.fix.data + '), second try'" }, files = { cel = "[{'path': 'tests/' + event.data.rule + '.toml', 'content': results.fix.text.replace('```toml', '').replace('```', '').trim()}]" } }
+
+[[action]]
+id = "note"
+capability = "praksis.notes.save"
+args = { title = { cel = "'Tests for ' + event.data.rule" }, text = { cel = "(results.propose.ok || results.propose_again.ok) ? 'A test file for ' + event.data.rule + ' is staged as ' + (results.propose.ok ? results.propose.id : results.propose_again.id) + '. Look at it with: praksis agent show ' + (results.propose.ok ? results.propose.id : results.propose_again.id) + '. If it is good, praksis agent export <id> <your checkout of ' + results.read.layer + '> and commit it yourself.' : 'No test file was staged for ' + event.data.rule + ': the checks refused what the model wrote twice. ' + (results.propose_again.covers ? '' : 'No test made the rule fire. ') + results.propose_again.problems.join('; ')" } }
