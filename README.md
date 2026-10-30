@@ -16,6 +16,10 @@ staged changes and the notes.
 
 ## What you do with a staged change
 
+In Praksis Desktop the tab **Agent** does all of this with buttons: it lists the staged changes, shows the
+files and the checks of the layer with them, **Export...** writes them into a directory you choose
+(your checkout) and **Drop...** throws one away. On the command line:
+
 Nothing is written to a layer, to git or to your files by the agent. A staged change lives in the data
 directory of Praksis, and you decide:
 
