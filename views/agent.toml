@@ -44,6 +44,12 @@ type = "text"
 value = "Staged changes (praksis agent show <id>)"
 style = "title"
 
+# the tab Agent has the files, the checks, Export and Drop
+[[component]]
+type = "button"
+label = "Open the tab Agent"
+opens = { screen = "agent" }
+
 [[component]]
 type = "table"
 rows = { cel = "source.staged.items" }
