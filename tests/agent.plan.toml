@@ -11,6 +11,7 @@ report = "CATALOG"
 [test.mock."ai.complete"]
 text = "[]"
 model = "m1"
+prompt_sha256 = "0123456789abcdef"
 data = "local"
 [test.mock."praksis.plan.read"]
 report = "NOTHING"
@@ -37,4 +38,4 @@ capability = "ai.complete"
 args = { prompt = "G\nThe request: move the newsletter to Reading", text = "CATALOG\nWHAT WAS READ\nNOTHING", profile = "local", max_tokens = 1500 }
 [[test.call]]
 capability = "praksis.plan.propose"
-args = { request = "move the newsletter to Reading", steps_json = "[]", reason = "Made by m1 (local) after 0 read(s)." }
+args = { request = "move the newsletter to Reading", steps_json = "[]", reason = "Made by m1 (local, prompt 0123456789ab) after 0 read(s)." }

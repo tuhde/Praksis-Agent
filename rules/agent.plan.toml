@@ -40,4 +40,4 @@ args = { prompt = { cel = "params.agent_plan_guide + '\\nThe request: ' + event.
 [[action]]
 id = "propose"
 capability = "praksis.plan.propose"
-args = { request = { cel = "event.data.request" }, steps_json = { cel = "results.steps.text" }, reason = { cel = "'Made by ' + results.steps.model + ' (' + results.steps.data + ') after ' + string(results.read.count) + ' read(s).'" } }
+args = { request = { cel = "event.data.request" }, steps_json = { cel = "results.steps.text" }, reason = { cel = "'Made by ' + results.steps.model + ' (' + results.steps.data + ', prompt ' + results.steps.prompt_sha256.substring(0, 12) + ') after ' + string(results.read.count) + ' read(s).'" } }

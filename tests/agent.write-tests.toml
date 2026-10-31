@@ -12,6 +12,7 @@ text = "RULE TEXT"
 [test.mock."ai.complete"]
 text = "```toml\nformat_version = 1\n```"
 model = "m1"
+prompt_sha256 = "0123456789abcdef"
 data = "local"
 [test.mock."praksis.agent.propose"]
 ok = true
@@ -30,7 +31,7 @@ capability = "ai.complete"
 args = { prompt = "G\nThe rule has the id r1. It is fired by the event x.", text = "RULE TEXT", profile = "local", max_tokens = 2000 }
 [[test.call]]
 capability = "praksis.agent.propose"
-args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local)", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
+args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local, prompt 0123456789ab)", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
 [[test.call]]
 capability = "praksis.notes.save"
 args = { title = "Tests for r1", text = "A test file for r1 is staged as abc. Look at it with: praksis agent show abc. If it is good, praksis agent export <id> <your checkout of mine> and commit it yourself." }
@@ -46,6 +47,7 @@ text = "RULE TEXT"
 [test.mock."ai.complete"]
 text = "```toml\nformat_version = 1\n```"
 model = "m1"
+prompt_sha256 = "0123456789abcdef"
 data = "local"
 [test.mock."praksis.agent.propose"]
 ok = false
@@ -64,13 +66,13 @@ capability = "ai.complete"
 args = { prompt = "G\nThe rule has the id r1. It is fired by the event x.", text = "RULE TEXT", profile = "local", max_tokens = 2000 }
 [[test.call]]
 capability = "praksis.agent.propose"
-args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local)", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
+args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local, prompt 0123456789ab)", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
 [[test.call]]
 capability = "ai.complete"
 args = { prompt = "G\nThe rule has the id r1. It is fired by the event x.\nYour earlier file was refused by the checks; the problems are below the rule. Write the whole file again, fixed.", text = "RULE TEXT\n--- your earlier file ---\n```toml\nformat_version = 1\n```\n--- the problems ---\nno test makes the rule fire\ntest: tests/r1.toml: boom", profile = "local", max_tokens = 2000 }
 [[test.call]]
 capability = "praksis.agent.propose"
-args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local), second try", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
+args = { layer = "mine", rule = "r1", reason = "Tests written by the maintenance agent with the model m1 (local, prompt 0123456789ab), second try", files = [{ path = "tests/r1.toml", content = "format_version = 1" }] }
 [[test.call]]
 capability = "praksis.notes.save"
 args = { title = "Tests for r1", text = "No test file was staged for r1: the checks refused what the model wrote twice. No test made the rule fire. test: tests/r1.toml: boom" }

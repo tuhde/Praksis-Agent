@@ -27,7 +27,7 @@ args = { prompt = { cel = "params.agent_test_guide + '\\nThe rule has the id ' +
 [[action]]
 id = "propose"
 capability = "praksis.agent.propose"
-args = { layer = { cel = "results.read.layer" }, rule = { cel = "event.data.rule" }, reason = { cel = "'Tests written by the maintenance agent with the model ' + results.draft.model + ' (' + results.draft.data + ')'" }, files = { cel = "[{'path': 'tests/' + event.data.rule + '.toml', 'content': results.draft.text.replace('```toml', '').replace('```', '').trim()}]" } }
+args = { layer = { cel = "results.read.layer" }, rule = { cel = "event.data.rule" }, reason = { cel = "'Tests written by the maintenance agent with the model ' + results.draft.model + ' (' + results.draft.data + ', prompt ' + results.draft.prompt_sha256.substring(0, 12) + ')'" }, files = { cel = "[{'path': 'tests/' + event.data.rule + '.toml', 'content': results.draft.text.replace('```toml', '').replace('```', '').trim()}]" } }
 
 # one more try, told what was wrong
 [[action]]
@@ -40,7 +40,7 @@ args = { prompt = { cel = "params.agent_test_guide + '\\nThe rule has the id ' +
 id = "propose_again"
 capability = "praksis.agent.propose"
 when = { cel = "!results.propose.ok" }
-args = { layer = { cel = "results.read.layer" }, rule = { cel = "event.data.rule" }, reason = { cel = "'Tests written by the maintenance agent with the model ' + results.fix.model + ' (' + results.fix.data + '), second try'" }, files = { cel = "[{'path': 'tests/' + event.data.rule + '.toml', 'content': results.fix.text.replace('```toml', '').replace('```', '').trim()}]" } }
+args = { layer = { cel = "results.read.layer" }, rule = { cel = "event.data.rule" }, reason = { cel = "'Tests written by the maintenance agent with the model ' + results.fix.model + ' (' + results.fix.data + ', prompt ' + results.fix.prompt_sha256.substring(0, 12) + '), second try'" }, files = { cel = "[{'path': 'tests/' + event.data.rule + '.toml', 'content': results.fix.text.replace('```toml', '').replace('```', '').trim()}]" } }
 
 [[action]]
 id = "note"
