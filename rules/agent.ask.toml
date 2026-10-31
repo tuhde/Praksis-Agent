@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+id = "agent.ask"
+description = "Answers a question about what Praksis did (\"why was the mail from Anna moved?\", \"what did the rules do this week?\"). It reads the run log, the audit log and the stored events through read-only capabilities, has a model write the answer from what it found, and leaves it as a note that also says what was looked at. It changes nothing."
+effect = "external"
+needs = ["praksis.history.summary", "ai.extract", "praksis.history.find", "praksis.history.trace", "ai.complete", "praksis.notes.save"]
+requires_modules = ["ai"]
+
+[trigger]
+kind = "command"
+title = "Ask what Praksis did"
+description = "Ask in your own words; the answer is a note."
+[[trigger.param]]
+name = "question"
+type = "string"
+label = "Your question"
+widget = "multiline"
+
+# what happened lately, in numbers
+[[action]]
+id = "summary"
+capability = "praksis.history.summary"
+args = { since_hours = { cel = "params.agent_history_hours" } }
+
+# which mail or event the question is about: a word to search for, taken from the question
+[[action]]
+id = "look"
+capability = "ai.extract"
+args = { text = { cel = "event.data.question" }, fields = ["search_text", "event_type"], instructions = { cel = "params.agent_extract_guide" }, profile = { cel = "params.agent_profile" } }
+
+[[action]]
+id = "find"
+capability = "praksis.history.find"
+when = { cel = "results.look.values.search_text != '' || results.look.values.event_type != ''" }
+args = { text = { cel = "results.look.values.search_text" }, type = { cel = "results.look.values.event_type" }, since_hours = { cel = "params.agent_history_hours" }, limit = 5 }
+
+# the newest match, with every step and call
+[[action]]
+id = "trace"
+capability = "praksis.history.trace"
+when = { cel = "results.find.items.size() > 0" }
+args = { event = { cel = "results.find.items[0].event" } }
+
+[[action]]
+id = "answer"
+capability = "ai.complete"
+args = { prompt = { cel = "params.agent_ask_guide + '\\nThe question: ' + event.data.question" }, text = { cel = "'WHAT HAPPENED LATELY\\n' + results.summary.report + '\\nEVENTS THAT MATCH THE QUESTION\\n' + results.find.report + '\\nTHE NEWEST OF THEM, STEP BY STEP\\n' + results.trace.report" }, profile = { cel = "params.agent_profile" }, max_tokens = 800 }
+
+[[action]]
+id = "note"
+capability = "praksis.notes.save"
+args = { title = { cel = "'Answer: ' + (event.data.question.size() > 80 ? event.data.question.substring(0, 80) : event.data.question)" }, text = { cel = "results.answer.text.trim() + '\\n\\nWhat I looked at: the run log, the audit log and the events of the last ' + string(params.agent_history_hours) + ' hours' + (results.find.items.size() > 0 ? '; ' + string(results.find.items.size()) + ' event(s) that match \"' + results.look.values.search_text + '\"; the steps and calls for event ' + results.find.items[0].event : '') + '. (' + results.answer.model + ', ' + results.answer.data + ')'" } }

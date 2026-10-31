@@ -9,6 +9,7 @@ the audit log like any other rule.
 | Command | What it does |
 |---|---|
 | **Write tests for a rule** (`agent.write-tests`) | The model writes a test file for a rule that has none. The file is checked at once: does it parse, do its tests pass, does one make the rule fire, does it break anything. If not, the model is told the problems and gets **one more try**. A file that passes is **staged**; a file that does not is thrown away. Either way a note says what happened. |
+| **Ask what Praksis did** (`agent.ask`) | You ask in your own words ("why was the mail from Anna moved?", "what did the rules do this week?"). The agent reads the run log, the audit log and the stored events through read-only capabilities, has a model write the answer **only from what it found**, and leaves it as a note that **says what was looked at**. It changes nothing. |
 | **Explain a rule** (`agent.explain-rule`) | The model explains a rule in plain words (when it fires, what it may do, what could go wrong) and leaves the explanation as a note. It changes nothing. |
 
 The view **Agent** shows the rules that have no test (with a button that starts the command), the
@@ -16,7 +17,8 @@ staged changes and the notes.
 
 ## What you do with a staged change
 
-In Praksis Desktop the tab **Agent** does all of this with buttons: it lists the staged changes, shows the
+In Praksis Desktop the tab **Agent** does all of this with buttons: **Ask...** asks a question and shows the
+answer, **Notes...** reads the notes again, **Write tests...** has tests written for a rule; it lists the staged changes, shows the
 files and the checks of the layer with them, **Export...** writes them into a directory you choose
 (your checkout) and **Drop...** throws one away. On the command line:
 
@@ -68,6 +70,8 @@ id = "agent-note"
 layer = "agent"
 capability = "praksis.notes.save"
 ```
+
+(For **Ask what Praksis did** also `praksis.history.summary`, `praksis.history.find`, `praksis.history.trace`, `ai.extract` (limited to your local profile, like `ai.complete`) and `praksis.notes.save`.)
 
 (For the view also `praksis.rules.list`, `praksis.agent.proposals` and `praksis.notes.list`; for
 explanations the same as above without `praksis.agent.propose`.)

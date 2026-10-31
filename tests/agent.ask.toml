@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: Apache-2.0
+format_version = 1
+
+[[test]]
+name = "a question about a mail is answered from the search and the trace of the newest match"
+[test.params]
+agent_ask_guide = "G"
+agent_extract_guide = "X"
+[test.mock."praksis.history.summary"]
+report = "SUMMARY"
+[test.mock."ai.extract"]
+values = { search_text = "anna", event_type = "" }
+model = "m1"
+data = "local"
+[test.mock."praksis.history.find"]
+items = [{ event = "e1" }, { event = "e0" }]
+report = "FOUND"
+[test.mock."praksis.history.trace"]
+report = "TRACE"
+[test.mock."ai.complete"]
+text = "  It was moved by mail.10-spam.  "
+model = "m1"
+data = "local"
+[test.event]
+type = "command.agent.ask"
+data = { question = "why was the mail from Anna moved?" }
+[[test.call]]
+capability = "praksis.history.summary"
+args = { since_hours = 168 }
+[[test.call]]
+capability = "ai.extract"
+args = { text = "why was the mail from Anna moved?", fields = ["search_text", "event_type"], instructions = "X", profile = "local" }
+[[test.call]]
+capability = "praksis.history.find"
+args = { text = "anna", type = "", since_hours = 168, limit = 5 }
+[[test.call]]
+capability = "praksis.history.trace"
+args = { event = "e1" }
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "G\nThe question: why was the mail from Anna moved?", text = "WHAT HAPPENED LATELY\nSUMMARY\nEVENTS THAT MATCH THE QUESTION\nFOUND\nTHE NEWEST OF THEM, STEP BY STEP\nTRACE", profile = "local", max_tokens = 800 }
+[[test.call]]
+capability = "praksis.notes.save"
+args = { title = "Answer: why was the mail from Anna moved?", text = "It was moved by mail.10-spam.\n\nWhat I looked at: the run log, the audit log and the events of the last 168 hours; 2 event(s) that match \"anna\"; the steps and calls for event e1. (m1, local)" }
+
+[[test]]
+name = "a question about everything has no search and no trace"
+[test.params]
+agent_ask_guide = "G"
+agent_extract_guide = "X"
+[test.mock."praksis.history.summary"]
+report = "SUMMARY"
+[test.mock."ai.extract"]
+values = { search_text = "", event_type = "" }
+model = "m1"
+data = "local"
+[test.mock."ai.complete"]
+text = "Three mails were moved."
+model = "m1"
+data = "local"
+[test.event]
+type = "command.agent.ask"
+data = { question = "what did the rules do this week?" }
+[[test.call]]
+capability = "praksis.history.summary"
+args = { since_hours = 168 }
+[[test.call]]
+capability = "ai.extract"
+args = { text = "what did the rules do this week?", fields = ["search_text", "event_type"], instructions = "X", profile = "local" }
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "G\nThe question: what did the rules do this week?", text = "WHAT HAPPENED LATELY\nSUMMARY\nEVENTS THAT MATCH THE QUESTION\n\nTHE NEWEST OF THEM, STEP BY STEP\n", profile = "local", max_tokens = 800 }
+[[test.call]]
+capability = "praksis.notes.save"
+args = { title = "Answer: what did the rules do this week?", text = "Three mails were moved.\n\nWhat I looked at: the run log, the audit log and the events of the last 168 hours. (m1, local)" }
