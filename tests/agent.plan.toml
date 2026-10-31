@@ -38,4 +38,4 @@ capability = "ai.complete"
 args = { prompt = "G\nThe request: move the newsletter to Reading", text = "CATALOG\nWHAT WAS READ\nNOTHING", profile = "local", max_tokens = 1500 }
 [[test.call]]
 capability = "praksis.plan.propose"
-args = { request = "move the newsletter to Reading", steps_json = "[]", reason = "Made by m1 (local, prompt 0123456789ab) after 0 read(s)." }
+args = { request = "move the newsletter to Reading", steps_json = "[]", context = "NOTHING", reason = "Made by m1 (local, prompt 0123456789ab) after 0 read(s)." }
