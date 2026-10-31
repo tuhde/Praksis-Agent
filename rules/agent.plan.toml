@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+id = "agent.plan"
+description = "Turns what you ask for in words (\"move everything from the newsletter to Reading\") into a plan: a list of literal calls of capabilities that you can read. It may first look around with read-only capabilities. It changes nothing: the plan is kept for you, and only your approval in Praksis Desktop (or praksis agent plan-run) runs it, under the grants of the layer named in [plan] of praksis.toml. A step that no grant covers is shown as such and cannot run."
+effect = "external"
+needs = ["praksis.plan.catalog", "ai.complete", "praksis.plan.read", "praksis.plan.propose"]
+requires_modules = ["ai"]
+
+[trigger]
+kind = "command"
+title = "Plan what to do"
+description = "Say in your own words what should be done. You see the plan before anything happens."
+[[trigger.param]]
+name = "request"
+type = "string"
+label = "What should be done?"
+widget = "multiline"
+
+# what the plan layer may ask for at all
+[[action]]
+id = "catalog"
+capability = "praksis.plan.catalog"
+
+# the model may want to look first (which folders, which mails): reads, as a JSON list
+[[action]]
+id = "look"
+capability = "ai.complete"
+args = { prompt = { cel = "params.agent_plan_reads_guide + '\\nThe request: ' + event.data.request" }, text = { cel = "results.catalog.report" }, profile = { cel = "params.agent_profile" }, max_tokens = 500 }
+
+[[action]]
+id = "read"
+capability = "praksis.plan.read"
+args = { reads_json = { cel = "results.look.text" } }
+
+# the steps, as a JSON list of literal calls
+[[action]]
+id = "steps"
+capability = "ai.complete"
+args = { prompt = { cel = "params.agent_plan_guide + '\\nThe request: ' + event.data.request" }, text = { cel = "results.catalog.report + '\\nWHAT WAS READ\\n' + results.read.report" }, profile = { cel = "params.agent_profile" }, max_tokens = 1500 }
+
+[[action]]
+id = "propose"
+capability = "praksis.plan.propose"
+args = { request = { cel = "event.data.request" }, steps_json = { cel = "results.steps.text" }, reason = { cel = "'Made by ' + results.steps.model + ' (' + results.steps.data + ') after ' + string(results.read.count) + ' read(s).'" } }

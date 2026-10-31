@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: Apache-2.0
+format_version = 1
+
+[[test]]
+name = "a request is turned into a plan after looking around, and nothing else happens"
+[test.params]
+agent_plan_reads_guide = "R"
+agent_plan_guide = "G"
+[test.mock."praksis.plan.catalog"]
+report = "CATALOG"
+[test.mock."ai.complete"]
+text = "[]"
+model = "m1"
+data = "local"
+[test.mock."praksis.plan.read"]
+report = "NOTHING"
+count = 0
+[test.mock."praksis.plan.propose"]
+id = "p1"
+steps = 1
+refused = 0
+runnable = true
+[test.event]
+type = "command.agent.plan"
+data = { request = "move the newsletter to Reading" }
+[[test.call]]
+capability = "praksis.plan.catalog"
+args = {}
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "R\nThe request: move the newsletter to Reading", text = "CATALOG", profile = "local", max_tokens = 500 }
+[[test.call]]
+capability = "praksis.plan.read"
+args = { reads_json = "[]" }
+[[test.call]]
+capability = "ai.complete"
+args = { prompt = "G\nThe request: move the newsletter to Reading", text = "CATALOG\nWHAT WAS READ\nNOTHING", profile = "local", max_tokens = 1500 }
+[[test.call]]
+capability = "praksis.plan.propose"
+args = { request = "move the newsletter to Reading", steps_json = "[]", reason = "Made by m1 (local) after 0 read(s)." }

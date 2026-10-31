@@ -10,6 +10,7 @@ the audit log like any other rule.
 |---|---|
 | **Write tests for a rule** (`agent.write-tests`) | The model writes a test file for a rule that has none. The file is checked at once: does it parse, do its tests pass, does one make the rule fire, does it break anything. If not, the model is told the problems and gets **one more try**. A file that passes is **staged**; a file that does not is thrown away. Either way a note says what happened. |
 | **Ask what Praksis did** (`agent.ask`) | You ask in your own words ("why was the mail from Anna moved?", "what did the rules do this week?"). The agent reads the run log, the audit log and the stored events through read-only capabilities, has a model write the answer **only from what it found**, and leaves it as a note that **says what was looked at**. It changes nothing. |
+| **Plan what to do** (`agent.plan`) | You say in your own words what should be done ("move everything from the newsletter to Reading"). The model may first look around with read-only capabilities, then turns the request into a **plan of literal calls** that you can read. **The agent changes nothing:** the plan waits until you approve it in Praksis Desktop (**Plan...**, **Plans...**) or with `praksis agent plan-run <id>`, and then it runs under the grants of the layer you name in `praksis.toml` (`[plan] layer = "mine"`). A step that no grant of that layer covers is shown as such and the plan cannot run; every step is checked again before the first one runs. |
 | **Explain a rule** (`agent.explain-rule`) | The model explains a rule in plain words (when it fires, what it may do, what could go wrong) and leaves the explanation as a note. It changes nothing. |
 
 The view **Agent** shows the rules that have no test (with a button that starts the command), the
@@ -72,6 +73,8 @@ capability = "praksis.notes.save"
 ```
 
 (For **Ask what Praksis did** also `praksis.history.summary`, `praksis.history.find`, `praksis.history.trace`, `ai.extract` (limited to your local profile, like `ai.complete`) and `praksis.notes.save`.)
+
+(For **Plan what to do** also `praksis.plan.catalog`, `praksis.plan.read` and `praksis.plan.propose`, and `ai.complete` as above. The capabilities that the plan may *call* are granted to the layer named in `[plan]`, not to this one.)
 
 (For the view also `praksis.rules.list`, `praksis.agent.proposals` and `praksis.notes.list`; for
 explanations the same as above without `praksis.agent.propose`.)
